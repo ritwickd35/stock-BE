@@ -1,7 +1,10 @@
-import fs from 'fs'
-import { parentPort, workerData } from "worker_threads"
+import fs from 'fs';
+import instruments from "./instruments.js"
+import { parentPort, workerData } from "worker_threads";
 
-console.log("Got request in worker to generate new data. Interval is ", workerData.interval)
+const { interval, totalRecords } = workerData;
+
+console.log(`Got request in worker to generate new data having ${totalRecords} records with ${interval} interval.`)
 
 function getRandomInRange(min, max) {
     return Math.random() * (max - min) + min;
@@ -9,7 +12,6 @@ function getRandomInRange(min, max) {
 
 // Function to generate mock stock market data for a single instrument
 function generateStockData(symbol, workerData) {
-    const { interval, totalRecords } = workerData;
 
     const startDate = new Date("2018-10-19").getTime();
     const data = [];
@@ -37,14 +39,13 @@ function generateStockData(symbol, workerData) {
     return data;
 }
 
-const instruments = ['AAPL', 'GOOGL', 'AMZN', 'MSFT', 'TSLA', 'FB', 'NVDA', 'NFLX', 'BRK', 'V'];
 
 
 // Function to generate mock stock market data for multiple instruments
 function generateMarketData(workerData) {
     let marketData = {};
 
-    console.log(`Generating ${workerData.interval} mock data consisting of ${workerData.totalRecords}`);
+    console.log(`Generating ${workerData.interval} mock data consisting of ${workerData.totalRecords} records`);
     instruments.forEach((symbol) => {
         marketData = generateStockData(symbol, workerData);
         fs.writeFileSync(`./stockData/${symbol}${workerData.interval}.json`, JSON.stringify(marketData))
@@ -56,7 +57,7 @@ function generateMarketData(workerData) {
 // generate data
 try {
     generateMarketData(workerData);
-    console.log("This worker has successfully generated mock data for interval", workerData.interval)
+    console.log(`This worker has successfully generated ${totalRecords} datapoints of mock data having ${interval} interval`)
     parentPort.postMessage("Data generation done")
 }
 catch (e) {
