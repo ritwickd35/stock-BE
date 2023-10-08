@@ -19,14 +19,19 @@ const socketPort = "5556";
 
 app.get("/generate-data", (req, res) => {
 
-    const interval = req.query.interval;
+    let { interval, totalRecords } = req.query;
     console.log(interval, interval != "hourly" || interval != "daily")
     if (interval !== "hourly" && interval !== "daily") {
         return void res.status(400).send("Invalid interval given. Mock data generation interval can be hourly or daily")
     }
+
+    if (!totalRecords || isNaN(Number(totalRecords)))
+        totalRecords = 5000;
+
+
     const worker = new Worker("./mockgenerator.js", {
         workerData: {
-            interval
+            interval, totalRecords
         }
     })
 
@@ -34,7 +39,7 @@ app.get("/generate-data", (req, res) => {
 
     worker.on('message', (result) => {
         console.log(`Got message from worker ${result}`)
-        global.socket.emit("mock-data", result)
+        if (global.socket) global.socket.emit("mock-data", result)
     })
 
     return void res.status(200).send("Data Generation Started")
