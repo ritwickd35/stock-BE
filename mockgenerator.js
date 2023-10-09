@@ -55,7 +55,7 @@ function generateMarketData(interval, totalRecords) {
     return marketData;
 }
 
-// generate data
+// exporting function for piscina to run
 export default ({ interval, totalRecords }) => {
     console.log(`Got request in worker to generate new data having ${totalRecords} records with ${interval} interval.`)
 

@@ -32,6 +32,8 @@ app.get("/generate-data", (req, res) => {
 
     let { interval, totalRecords } = req.query;
 
+    res.type('text/html')
+
     if (interval !== "hourly" && interval !== "daily") {
         return void res.status(400).send("Invalid interval given. Mock data generation interval can be hourly or daily")
     }
@@ -40,11 +42,11 @@ app.get("/generate-data", (req, res) => {
         totalRecords = 5000;
 
 
-    piscina.run({ interval, totalRecords }).then(({ err, status }) => {
-        if (err) global.socket.emit("mock-data", { err, status })
+    piscina.run({ interval, totalRecords }).then(({ err, success }) => {
+        if (err) global.socket.emit("mock-data", { err, success })
         else {
-            console.log(`Got task from worker success:${status}. Time taken is ${new Date().getTime() - start} ms for ${totalRecords} records`)
-            if (global.socket) global.socket.emit("mock-data", { err, status })
+            console.log(`Got task from worker success:${success}. Time taken is ${new Date().getTime() - start} ms for ${totalRecords} records`)
+            if (global.socket) global.socket.emit("mock-data", { err, success })
         }
     })
 
@@ -54,25 +56,30 @@ app.get("/generate-data", (req, res) => {
 })
 
 app.get("/instruments", (req, res) => {
+    res.type('json');
     res.status(200).send(instruments)
 })
 
 app.get("/search", (req, res) => {
     const { symbol, interval } = req.query;
+    res.type('json');
     if (interval !== "hourly" && interval !== "daily") {
-        return void res.status(400).send("Invalid interval given. Mock data generation interval can be hourly or daily")
+        return void res.status(400).send({ status: "failure", data: "Invalid interval given. Mock data generation interval can be hourly or daily" })
     }
     if (!instruments.includes(symbol)) {
-        return void res.status(400).send("Invalid symbol given.")
+        return void res.status(400).send({ status: "failure", data: "Invalid symbol given." })
     }
 
-    const stockData = fs.readFile(`./stockData/${symbol + interval}.json`, 'utf8', (err, data) => {
-        if (err) {
-            console.error(err)
-            return void res.status(400).send(err)
-        }
-        return void res.status(200).send(data)
-    })
+    const fileReadStream = fs.createReadStream(`./stockData/${symbol + interval}.json`);
+    fileReadStream.pipe(res);
+
+    // fs.readFile(`./stockData/${symbol + interval}.json`, 'utf8', (err, data) => {
+    //     if (err) {
+    //         console.error(err)
+    //         return void res.status(400).send({ status: "failure", data: err })
+    //     }
+    //     return void res.status(200).send({ status: "success", data: data })
+    // })
 })
 
 app.listen(port)
