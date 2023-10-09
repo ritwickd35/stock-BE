@@ -1,17 +1,13 @@
 import fs from 'fs';
 import instruments from "./instruments.js"
-import { parentPort, workerData } from "worker_threads";
 
-const { interval, totalRecords } = workerData;
-
-console.log(`Got request in worker to generate new data having ${totalRecords} records with ${interval} interval.`)
 
 function getRandomInRange(min, max) {
     return Math.random() * (max - min) + min;
 }
 
 // Function to generate mock stock market data for a single instrument
-function generateStockData(symbol, workerData) {
+function generateStockData(interval, totalRecords) {
 
     const startDate = new Date("2018-10-19").getTime();
     const data = [];
@@ -42,27 +38,35 @@ function generateStockData(symbol, workerData) {
 
 
 // Function to generate mock stock market data for multiple instruments
-function generateMarketData(workerData) {
+function generateMarketData(interval, totalRecords) {
     let marketData = {};
 
-    console.log(`Generating ${workerData.interval} mock data consisting of ${workerData.totalRecords} records`);
+    console.log(`Generating ${interval} mock data consisting of ${totalRecords} records`);
     instruments.forEach((symbol) => {
-        marketData = generateStockData(symbol, workerData);
-        fs.writeFileSync(`./stockData/${symbol}${workerData.interval}.json`, JSON.stringify(marketData))
+        marketData = generateStockData(interval, totalRecords);
+        fs.writeFile(`./stockData/${symbol}${interval}.json`, JSON.stringify(marketData), err => {
+            if (err) {
+                console.error("Error in worker", err)
+                parentPort.postMessage(`Error in data generation ${err.message}`)
+            }
+        })
     });
 
     return marketData;
 }
 
 // generate data
-try {
-    generateMarketData(workerData);
-    console.log(`This worker has successfully generated ${totalRecords} datapoints of mock data having ${interval} interval`)
-    parentPort.postMessage("Data generation done")
-}
-catch (e) {
-    console.log(e)
-    parentPort.postMessage(`Error in data generation ${e.message}`)
-}
+export default ({ interval, totalRecords }) => {
+    console.log(`Got request in worker to generate new data having ${totalRecords} records with ${interval} interval.`)
 
+    try {
+        generateMarketData(interval, totalRecords);
+        console.log(`This worker has successfully generated ${totalRecords} datapoints of mock data having ${interval} interval`)
+        return { err: null, success: true }
+    }
+    catch (e) {
+        console.log(e)
+        return { err: e, success: false }
+    }
+}
 

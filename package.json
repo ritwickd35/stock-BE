@@ -12,6 +12,7 @@
   "dependencies": {
     "body-parser": "^1.20.2",
     "express": "^4.18.2",
+    "piscina": "^4.1.0",
     "socket.io": "^4.7.2"
   }
 }
