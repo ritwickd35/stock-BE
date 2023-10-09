@@ -23,7 +23,7 @@ function generateStockData(interval, totalRecords) {
         const volume = Math.floor(getRandomInRange(100000, 1000000));
 
         data.push({
-            time: interval === 'daily' ? currentDate.toISOString().split('T')[0] : currentDate.toISOString(),
+            time: interval === 'daily' ? currentDate.toISOString().split('T')[0] : Math.floor(currentDate.getTime() / 1000),
             open: parseFloat(open),
             high: parseFloat(high),
             low: parseFloat(low),

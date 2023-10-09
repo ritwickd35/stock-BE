@@ -4,10 +4,18 @@ import { createServer } from "http";
 import instruments from "./instruments.js"
 import fs from 'fs';
 import Piscina from 'piscina';
+import cors from 'cors';
+
+
 
 
 
 const app = express();
+
+// enabling CORS from all origins
+app.use(cors())
+
+
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
