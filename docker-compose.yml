@@ -1,0 +1,13 @@
+version: '3'
+services:
+  stock-BE:
+    container_name: stockbe
+    image: stockbe
+    restart: always
+    build: .
+    ports:
+      - "5555:5555"
+      - "5556:5556"
+    # networks:
+    #   my-network:
+    #       driver: bridge
