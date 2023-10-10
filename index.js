@@ -32,6 +32,5 @@ app.use('/api', routes)
 
 
 // listening to port
-app.listen(port)
-io.listen(socketPort)
+httpServer.listen(port)
 
