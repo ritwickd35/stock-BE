@@ -25,13 +25,15 @@ io.on("connection", (socket) => {
 })
 
 const port = "5555";
-const socketPort = "5556";
 
 // registering routes
 app.use('/api', routes)
+app.get('/', (req, res) => {
+    return void res.send("stock BE running")
+})
 
 
 // listening to port
-app.listen(port)
-io.listen(socketPort)
+httpServer.listen(port)
 
+console.log("node app started")

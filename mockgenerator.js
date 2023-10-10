@@ -47,7 +47,6 @@ function generateMarketData(interval, totalRecords) {
         fs.writeFile(`./stockData/${symbol}${interval}.json`, JSON.stringify(marketData), err => {
             if (err) {
                 console.error("Error in worker", err)
-                parentPort.postMessage(`Error in data generation ${err.message}`)
             }
         })
     });
@@ -58,8 +57,22 @@ function generateMarketData(interval, totalRecords) {
 // exporting function for piscina to run
 export default ({ interval, totalRecords }) => {
     console.log(`Got request in worker to generate new data having ${totalRecords} records with ${interval} interval.`)
+    console.log("Checking if directory exists")
+
+
 
     try {
+        if (!fs.existsSync('./stockData')) {
+            console.log("Directory does not exist. Creating new Directory")
+
+            // Do something
+            fs.mkdir('./stockData', {}, (err) => {
+                if (err) throw err;
+
+                console.log("Directory created")
+
+            });
+        }
         generateMarketData(interval, totalRecords);
         console.log(`This worker has successfully generated ${totalRecords} datapoints of mock data having ${interval} interval`)
         return { err: null, success: true }
