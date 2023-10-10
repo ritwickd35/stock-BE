@@ -6,25 +6,26 @@ import fs from 'fs';
 import Piscina from 'piscina';
 import cors from 'cors';
 
-
-
-
-
+// creating express server
 const app = express();
 
 // enabling CORS from all origins
 app.use(cors())
 
-
+// creating socket io server
 const httpServer = createServer(app);
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*'
+    }
+});
 
+// creating a thread pool for the mock data generator
 const piscina = new Piscina({
     filename: './mockgenerator.js',
     minThreads: 2,
     idleTimeout: 100,
 })
-
 
 io.on("connection", (socket) => {
     console.log(`Connected to client with ${socket.id}`)
@@ -54,7 +55,10 @@ app.get("/generate-data", (req, res) => {
         if (err) global.socket.emit("mock-data", { err, success })
         else {
             console.log(`Got task from worker success:${success}. Time taken is ${new Date().getTime() - start} ms for ${totalRecords} records`)
-            if (global.socket) global.socket.emit("mock-data", { err, success })
+            if (global.socket) {
+                console.log("emitting task status to connected socket")
+                global.socket.emit("mock-data", { err, success })
+            }
         }
     })
 
@@ -78,16 +82,13 @@ app.get("/search", (req, res) => {
         return void res.status(400).send({ status: "failure", data: "Invalid symbol given." })
     }
 
+    // creating a stream from the file and piping the file to the response object
     const fileReadStream = fs.createReadStream(`./stockData/${symbol + interval}.json`);
-    fileReadStream.pipe(res);
+    fileReadStream.on('error', err => {
+        return void res.status(404).send({ status: "failure", data: err.message })
 
-    // fs.readFile(`./stockData/${symbol + interval}.json`, 'utf8', (err, data) => {
-    //     if (err) {
-    //         console.error(err)
-    //         return void res.status(400).send({ status: "failure", data: err })
-    //     }
-    //     return void res.status(200).send({ status: "success", data: data })
-    // })
+    })
+    fileReadStream.pipe(res);
 })
 
 app.listen(port)

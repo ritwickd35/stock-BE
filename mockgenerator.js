@@ -16,9 +16,9 @@ function generateStockData(interval, totalRecords) {
 
     for (let i = 0; i < totalRecords; i++) {
         const currentDate = new Date(startDate + i * incrementFactor);
-        const open = getRandomInRange(100, 200).toFixed(2);
-        const high = (parseFloat(open) + getRandomInRange(0, 10)).toFixed(2);
-        const low = (parseFloat(open) - getRandomInRange(0, 10)).toFixed(2);
+        const open = i == 0 ? Math.random() * Math.random() * 1000 : data[i - 1]["close"];
+        const high = (parseFloat(open) + getRandomInRange(0, Math.random() * 11)).toFixed(2);
+        const low = (parseFloat(open) - getRandomInRange(0, Math.random() * 11)).toFixed(2);
         const close = getRandomInRange(parseFloat(low), parseFloat(high)).toFixed(2);
         const volume = Math.floor(getRandomInRange(100000, 1000000));
 
